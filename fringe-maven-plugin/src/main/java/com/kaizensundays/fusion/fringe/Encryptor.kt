@@ -48,10 +48,14 @@ class Encryptor {
         File(keyFile).writeText(base64)
     }
 
-    fun readKey(keyFile: String): SecretKey {
-        val base64 = File(keyFile).readText().trim()
+    fun getKey(base64: String): SecretKey {
         val bytes = Base64.getDecoder().decode(base64)
         return SecretKeySpec(bytes, "AES")
+    }
+
+    fun readKey(keyFile: String): SecretKey {
+        val base64 = File(keyFile).readText().trim()
+        return getKey(base64)
     }
 
     private fun getRandomChars(size: Int): String {

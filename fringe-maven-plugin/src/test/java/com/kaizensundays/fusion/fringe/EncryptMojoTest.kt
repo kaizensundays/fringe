@@ -28,17 +28,18 @@ class EncryptMojoTest {
 
         System.setProperty("i", "inputFile")
         System.setProperty("o", "outputFile")
+        System.setProperty("key", "1234567")
     }
 
     @Test
-    fun test() {
+    fun encrypt() {
 
-        whenever(encryptor.readKey(any())).thenReturn(key)
+        whenever(encryptor.getKey(any())).thenReturn(key)
         whenever(encryptor.getRandomBytes(16)).thenReturn(iv)
 
         mojo.execute()
 
-        verify(encryptor).readKey(any())
+        verify(encryptor).getKey(any())
         verify(encryptor).getRandomBytes(16)
         verify(encryptor).encrypt("inputFile", "outputFile", key, iv)
         verifyNoMoreInteractions(encryptor)
@@ -49,7 +50,7 @@ class EncryptMojoTest {
 
         mojo.logger = mock()
 
-        whenever(encryptor.readKey(any())).thenReturn(key)
+        whenever(encryptor.getKey(any())).thenReturn(key)
         whenever(encryptor.getRandomBytes(16)).thenReturn(iv)
 
         whenever(encryptor.encrypt("inputFile", "outputFile", key, iv))

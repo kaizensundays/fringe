@@ -1,5 +1,6 @@
 package com.kaizensundays.fusion.fringe
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
@@ -15,23 +16,28 @@ import javax.crypto.SecretKey
  */
 class DecryptMojoTest {
 
+    private val encryptor: Encryptor = mock()
+    private val key: SecretKey = mock()
+
     private val mojo = DecryptMojo()
 
-    @Test
-    fun test() {
-        val encryptor: Encryptor = mock()
+    @BeforeEach
+    fun before() {
         mojo.encryptor = encryptor
 
         System.setProperty("i", "inputFile")
         System.setProperty("o", "outputFile")
+        System.setProperty("key", "1234567")
+    }
 
-        val key: SecretKey = mock()
+    @Test
+    fun decrypt() {
 
-        whenever(encryptor.readKey(any())).thenReturn(key)
+        whenever(encryptor.getKey(any())).thenReturn(key)
 
         mojo.execute()
 
-        verify(encryptor).readKey(any())
+        verify(encryptor).getKey(any())
         verify(encryptor).decrypt("inputFile", "outputFile", key)
         verifyNoMoreInteractions(encryptor)
     }
