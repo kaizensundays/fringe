@@ -3,11 +3,15 @@ package com.kaizensundays.fusion.fringe
 import org.bouncycastle.jcajce.provider.digest.SHA256
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.security.Security
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Created: Monday 10/28/2024, 8:47 PM Eastern Time
@@ -16,6 +20,8 @@ import java.util.*
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class ObserverTest {
+
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     val targetDir = "target/.fringe"
 
@@ -64,6 +70,25 @@ class ObserverTest {
         val decrypted = encryptor.decrypt(decoded, key, iv)
 
         assertEquals(sample, String(decrypted))
+    }
+
+    fun isRunningFromMaven(): Boolean {
+        return System.getProperty("surefire.test.class.path") != null
+    }
+
+    @Test
+    fun ui() {
+        if (isRunningFromMaven()) {
+            return
+        }
+
+        val done = Observer().build()
+
+        val text = done.get(100, TimeUnit.SECONDS)
+
+        println("text=$text")
+
+        assertTrue(text != null && text.isNotBlank())
     }
 
 }
