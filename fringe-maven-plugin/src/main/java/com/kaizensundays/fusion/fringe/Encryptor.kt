@@ -1,5 +1,6 @@
 package com.kaizensundays.fusion.fringe
 
+import org.bouncycastle.jcajce.provider.digest.SHA256
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -46,6 +47,12 @@ class Encryptor {
     fun writeKey(key: SecretKey, keyFile: String) {
         val base64 = Base64.getEncoder().encodeToString(key.encoded)
         File(keyFile).writeText(base64)
+    }
+
+    fun sha256(s: String): String {
+        val digest = SHA256.Digest()
+        val bytes = digest.digest(s.toByteArray())
+        return Base64.getEncoder().encodeToString(bytes)
     }
 
     fun getKey(base64: String): SecretKey {

@@ -25,6 +25,11 @@ class Observer {
 
         val frame = JFrame()
 
+        fun complete(value: String) {
+            done.complete(value)
+            SwingUtilities.invokeLater { frame.dispose() }
+        }
+
         frame.title = "Observer"
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.setSize(400, 200)
@@ -47,15 +52,15 @@ class Observer {
 
         val button2 = JButton("Ok")
         button2.preferredSize = Dimension(96, 32)
-        button2.addActionListener { done.complete(fldText.text.trim()) }
+        button2.addActionListener { complete(fldText.text.trim()) }
         frame.add(button2)
 
         val button3 = JButton("Cancel")
         button3.preferredSize = Dimension(96, 32)
-        button3.addActionListener { done.complete("") }
+        button3.addActionListener { complete("") }
         frame.add(button3)
 
-        val scrollPane = JScrollPane(/*table*/)
+        val scrollPane = JScrollPane()
         content.add(scrollPane)
 
         layout.putConstraint(SpringLayout.NORTH, button1, 16, SpringLayout.NORTH, content)
@@ -72,7 +77,7 @@ class Observer {
 
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                done.complete("Done")
+                complete("")
             }
         })
 

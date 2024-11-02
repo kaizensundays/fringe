@@ -1,6 +1,5 @@
 package com.kaizensundays.fusion.fringe
 
-import org.bouncycastle.jcajce.provider.digest.SHA256
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -34,12 +33,6 @@ class ObserverTest {
         encryptor.progressCounterTerm = 1
     }
 
-    fun sha256(s: String): String {
-        val digest = SHA256.Digest()
-        val bytes = digest.digest(s.toByteArray())
-        return Base64.getEncoder().encodeToString(bytes)
-    }
-
     @Test
     fun encryptEndDecrypt() {
 
@@ -47,7 +40,7 @@ class ObserverTest {
 
         val observer = "September"
 
-        val sha256 = sha256(observer)
+        val sha256 = encryptor.sha256(observer)
 
         val key = encryptor.getKey(sha256)
 

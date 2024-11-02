@@ -5,6 +5,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.security.Security
+import java.util.concurrent.TimeUnit
 
 /**
  * Created: Sunday 9/1/2024, 12:25 PM Eastern Time
@@ -17,7 +18,26 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
     protected val keyFile = "KEY"
 
+    private val timeoutSec = 100L
+
     internal var encryptor = Encryptor()
+
+    fun getBase64Key(): String {
+
+        var base64Key = System.getProperty("key", "")
+
+        if (base64Key == null) {
+            val done = Observer().build()
+
+            val text = done.get(timeoutSec, TimeUnit.SECONDS)
+
+            require(text.isNotEmpty())
+
+            base64Key = encryptor.sha256(text)
+        }
+
+        return base64Key
+    }
 
     abstract fun doExecute()
 
