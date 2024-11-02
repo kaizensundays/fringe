@@ -33,16 +33,16 @@ class Observer {
         return String(this.password)
     }
 
+    private fun JFrame.complete(value: String, future: CompletableFuture<String>) {
+        future.complete(value)
+        SwingUtilities.invokeLater { this.dispose() }
+    }
+
     fun build(): CompletableFuture<String> {
 
         val done = CompletableFuture<String>()
 
         val frame = JFrame()
-
-        fun complete(value: String) {
-            done.complete(value)
-            SwingUtilities.invokeLater { frame.dispose() }
-        }
 
         frame.title = "Observer"
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -78,14 +78,14 @@ class Observer {
         btnOk.preferredSize = buttonSize
         btnOk.addActionListener {
             if (arrayOf(fldText1, fldText2).isOk()) {
-                complete(fldText1.getValue())
+                frame.complete(fldText1.getValue(), done)
             }
         }
         frame.add(btnOk)
 
         val btnCancel = JButton("Cancel")
         btnCancel.preferredSize = buttonSize
-        btnCancel.addActionListener { complete("") }
+        btnCancel.addActionListener { frame.complete("", done) }
         frame.add(btnCancel)
 
         layout.putConstraint(SpringLayout.NORTH, btnClear, 16, SpringLayout.NORTH, content)
@@ -105,7 +105,7 @@ class Observer {
 
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                complete("")
+                frame.complete("", done)
             }
         })
 
