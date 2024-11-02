@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture
 import javax.swing.JButton
 import javax.swing.JFrame
 import javax.swing.JPasswordField
-import javax.swing.JScrollPane
 import javax.swing.JTextField
 import javax.swing.SpringLayout
 import javax.swing.SwingUtilities
@@ -57,6 +56,7 @@ class Observer {
         content.layout = layout
 
         val textFieldSize = Dimension(16 * 20, 32)
+        val buttonSize = Dimension(96, 32)
 
         val fldText1 = JPasswordField()
         fldText1.preferredSize = textFieldSize
@@ -66,41 +66,38 @@ class Observer {
         fldText2.preferredSize = textFieldSize
         frame.add(fldText2)
 
-        val button1 = JButton("Clear")
-        button1.preferredSize = Dimension(96, 32)
-        button1.addActionListener {
+        val btnClear = JButton("Clear")
+        btnClear.preferredSize = buttonSize
+        btnClear.addActionListener {
             fldText1.text = ""
             fldText2.text = ""
         }
-        frame.add(button1)
+        frame.add(btnClear)
 
-        val button2 = JButton("Ok")
-        button2.preferredSize = Dimension(96, 32)
-        button2.addActionListener {
+        val btnOk = JButton("Ok")
+        btnOk.preferredSize = buttonSize
+        btnOk.addActionListener {
             if (arrayOf(fldText1, fldText2).isOk()) {
                 complete(fldText1.getValue())
             }
         }
-        frame.add(button2)
+        frame.add(btnOk)
 
-        val button3 = JButton("Cancel")
-        button3.preferredSize = Dimension(96, 32)
-        button3.addActionListener { complete("") }
-        frame.add(button3)
+        val btnCancel = JButton("Cancel")
+        btnCancel.preferredSize = buttonSize
+        btnCancel.addActionListener { complete("") }
+        frame.add(btnCancel)
 
-        val scrollPane = JScrollPane()
-        content.add(scrollPane)
+        layout.putConstraint(SpringLayout.NORTH, btnClear, 16, SpringLayout.NORTH, content)
+        layout.putConstraint(SpringLayout.WEST, btnClear, 16, SpringLayout.WEST, content)
 
-        layout.putConstraint(SpringLayout.NORTH, button1, 16, SpringLayout.NORTH, content)
-        layout.putConstraint(SpringLayout.WEST, button1, 16, SpringLayout.WEST, content)
+        layout.putConstraint(SpringLayout.NORTH, btnOk, 16, SpringLayout.NORTH, content)
+        layout.putConstraint(SpringLayout.WEST, btnOk, 16, SpringLayout.EAST, btnClear)
 
-        layout.putConstraint(SpringLayout.NORTH, button2, 16, SpringLayout.NORTH, content)
-        layout.putConstraint(SpringLayout.WEST, button2, 16, SpringLayout.EAST, button1)
+        layout.putConstraint(SpringLayout.NORTH, btnCancel, 16, SpringLayout.NORTH, content)
+        layout.putConstraint(SpringLayout.WEST, btnCancel, 16, SpringLayout.EAST, btnOk)
 
-        layout.putConstraint(SpringLayout.NORTH, button3, 16, SpringLayout.NORTH, content)
-        layout.putConstraint(SpringLayout.WEST, button3, 16, SpringLayout.EAST, button2)
-
-        layout.putConstraint(SpringLayout.NORTH, fldText1, 16, SpringLayout.SOUTH, button1)
+        layout.putConstraint(SpringLayout.NORTH, fldText1, 16, SpringLayout.SOUTH, btnClear)
         layout.putConstraint(SpringLayout.WEST, fldText1, 16, SpringLayout.WEST, content)
 
         layout.putConstraint(SpringLayout.NORTH, fldText2, 16, SpringLayout.SOUTH, fldText1)
