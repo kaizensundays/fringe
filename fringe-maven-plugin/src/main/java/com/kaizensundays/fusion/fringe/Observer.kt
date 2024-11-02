@@ -8,6 +8,7 @@ import java.awt.event.WindowEvent
 import java.util.concurrent.CompletableFuture
 import javax.swing.JButton
 import javax.swing.JFrame
+import javax.swing.JPasswordField
 import javax.swing.JScrollPane
 import javax.swing.JTextField
 import javax.swing.SpringLayout
@@ -20,13 +21,17 @@ import javax.swing.SwingUtilities
  */
 class Observer {
 
-    private fun Array<JTextField>.isOk(): Boolean {
+    private fun <T : JTextField> Array<T>.isOk(): Boolean {
         this.forEach { fld -> fld.text = fld.text.trim() }
         if (this.first().text == this.last().text && this.first().text.isNotBlank()) {
             return true
         }
         Toolkit.getDefaultToolkit().beep()
         return false
+    }
+
+    private fun JPasswordField.getValue(): String {
+        return String(this.password)
     }
 
     fun build(): CompletableFuture<String> {
@@ -53,11 +58,11 @@ class Observer {
 
         val textFieldSize = Dimension(16 * 20, 32)
 
-        val fldText1 = JTextField()
+        val fldText1 = JPasswordField()
         fldText1.preferredSize = textFieldSize
         frame.add(fldText1)
 
-        val fldText2 = JTextField()
+        val fldText2 = JPasswordField()
         fldText2.preferredSize = textFieldSize
         frame.add(fldText2)
 
@@ -73,7 +78,7 @@ class Observer {
         button2.preferredSize = Dimension(96, 32)
         button2.addActionListener {
             if (arrayOf(fldText1, fldText2).isOk()) {
-                complete(fldText1.text)
+                complete(fldText1.getValue())
             }
         }
         frame.add(button2)
