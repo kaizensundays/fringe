@@ -18,7 +18,7 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
     protected val keyFile = "KEY"
 
-    private val timeoutSec = 100L
+    private val timeoutSec = 1000L
 
     internal var encryptor = Encryptor()
 
@@ -26,7 +26,7 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
         var base64Key = System.getProperty("key", "")
 
-        if (base64Key == null) {
+        if (base64Key.isNullOrBlank()) {
             val done = Observer().build()
 
             val text = done.get(timeoutSec, TimeUnit.SECONDS)
