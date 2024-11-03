@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.security.Security
 import java.util.*
@@ -20,8 +18,6 @@ import java.util.concurrent.TimeUnit
 @Suppress("MemberVisibilityCanBePrivate")
 class ObserverTest {
 
-    private val logger: Logger = LoggerFactory.getLogger(javaClass)
-
     val targetDir = "target/.fringe"
 
     val encryptor = Encryptor()
@@ -31,6 +27,30 @@ class ObserverTest {
         File(targetDir).mkdirs()
         Security.addProvider(BouncyCastleProvider())
         encryptor.progressCounterTerm = 1
+    }
+
+    @Test
+    fun sha256() {
+
+        // https://emn178.github.io/online-tools/sha256.html
+
+        val sha256 = listOf(
+            "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+            "i7DPbrmxfQ99IrRW8SElfcElTh8BZlNwR2OD6ndt9BQ=",
+            "pm2JcOVpqUQjTL7oxBQ1f6YJLBq3efvWN0M/I+Koq7g=",
+            "zVWeoKvKCF7xRCc8qvcmYYO7oiLznYlOdJZvwEuP/xg=",
+            "B4JqMcdE+5Ot/u2oYa8Yx3mvlW8IcFxaU2xy+rgeguI=",
+            "WvLY0LGsUJ8F1HsZKPPVI9/fCEhNEk/kQ4IGYeOT/B4="
+        )
+
+        listOf(
+            "", "1234567", "August", "September",
+            "In this game of skill one must have above all else, patience.",
+            "The only thing better than a cow is a human!",
+        ).zip(sha256)
+            .forEach { (t, s) ->
+                assertEquals(s, encryptor.sha256(t))
+            }
     }
 
     @Test
