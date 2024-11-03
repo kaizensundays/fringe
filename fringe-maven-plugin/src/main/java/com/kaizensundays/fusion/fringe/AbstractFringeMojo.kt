@@ -23,12 +23,14 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
     internal var encryptor = Encryptor()
 
+    internal var observer = Observer()
+
     fun getBase64Key(): String {
 
         var base64Key = System.getProperty("key", "")
 
         if (base64Key.isNullOrBlank()) {
-            val done = Observer().build()
+            val done = observer.build()
 
             val text = done.get(timeoutSec, TimeUnit.SECONDS)
 
