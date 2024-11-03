@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author Sergey Chuykov
  */
+@SuppressWarnings("kotlin:S6518")
 abstract class AbstractFringeMojo : AbstractMojo() {
 
     internal var logger: Logger = LoggerFactory.getLogger(javaClass)
