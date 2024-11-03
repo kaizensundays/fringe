@@ -30,6 +30,8 @@ class AbstractFringeMojoTest {
 
         whenever(mojo.observer.build()).thenReturn(done)
 
+        System.clearProperty("key")
+
         var value = mojo.getBase64Key()
 
         assertEquals(base64Key, value)
