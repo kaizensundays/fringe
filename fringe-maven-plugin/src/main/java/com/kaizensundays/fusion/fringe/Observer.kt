@@ -1,5 +1,6 @@
 package com.kaizensundays.fusion.fringe
 
+import com.formdev.flatlaf.FlatIntelliJLaf
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Toolkit
@@ -37,6 +38,8 @@ class Observer {
 
         val done = CompletableFuture<String>()
 
+        FlatIntelliJLaf.setup()
+
         val frame = JFrame()
 
         fun complete(value: String) {
@@ -46,7 +49,7 @@ class Observer {
 
         frame.title = "Observer"
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-        frame.setSize(400, 300)
+        frame.setSize(380, 220)
         frame.setLocationRelativeTo(null)
 
         val content = frame.contentPane
