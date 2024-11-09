@@ -37,9 +37,9 @@ class AbstractFringeMojoTest {
         assertEquals(base64Key, value)
 
         // env
-        val plateau = "Putorana"
+        val lake = "Reiden"
 
-        base64Key = mojo.encryptor.sha256(plateau)
+        base64Key = mojo.encryptor.sha256(lake)
 
         System.setProperty("key", base64Key)
 
