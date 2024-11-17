@@ -19,7 +19,7 @@ class DecryptMojo : AbstractFringeMojo() {
         val outputFile = System.getProperty("o", "")
         require(outputFile.isNotEmpty())
 
-        val base64Key = getBase64Key()
+        val base64Key = getBase64Key(inputFile)
         require(base64Key.isNotEmpty())
 
         val key = encryptor.getKey(base64Key)

@@ -13,7 +13,9 @@ import javax.crypto.Cipher
 import javax.crypto.CipherOutputStream
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
+import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
@@ -26,13 +28,15 @@ class Encryptor {
 
     private val beginString = "Fringe"
 
-    private val version = 1
+    private val version = 3
 
     private val AES_BLOCK_SIZE = 16
     private val NUMBER_OF_BLOCKS = 1024
     private val KEY_SIZE_BITS = 256
+    private val SALT_SIZE = 16
     private val IV_SIZE = 16
     private val HEADER_SIZE = 16
+    private val PBE_ITERATIONS_COUNT = 1000
 
     private val chars = ('0'..'9') + ('A'..'Z') + ('a'..'z')
 
@@ -42,6 +46,17 @@ class Encryptor {
         val keyGen = KeyGenerator.getInstance("AES")
         keyGen.init(KEY_SIZE_BITS)
         return keyGen.generateKey()
+    }
+
+    fun generateKey(text: String, salt: ByteArray): SecretKey {
+        val keySpec = PBEKeySpec(text.toCharArray(), salt, PBE_ITERATIONS_COUNT, KEY_SIZE_BITS)
+        val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256", "BC")
+        return keyFactory.generateSecret(keySpec)
+    }
+
+    fun generateBase64Key(text: String, salt: ByteArray): String {
+        val key = generateKey(text, salt)
+        return Base64.getEncoder().encodeToString(key.encoded)
     }
 
     fun writeKey(key: SecretKey, keyFile: String) {
@@ -73,6 +88,10 @@ class Encryptor {
         return getRandomChars(size).toByteArray()
     }
 
+    fun generateSalt(): ByteArray {
+        return getRandomBytes(SALT_SIZE)
+    }
+
     fun generateIV(): ByteArray {
         return getRandomBytes(IV_SIZE)
     }
@@ -89,9 +108,9 @@ class Encryptor {
         return cipher
     }
 
-    fun header(beginString: String, version: Int, iv: ByteArray): String {
+    fun header(beginString: String, version: Int, salt: ByteArray, iv: ByteArray): String {
         val s = ("%s%02d").format(beginString, version)
-        return ("%-16s%s").format(s, String(iv))
+        return ("%-16s%s%s").format(s, String(salt), String(iv))
     }
 
     private fun process(inputStream: InputStream, outputStream: OutputStream, cipher: Cipher) {
@@ -108,14 +127,14 @@ class Encryptor {
         }
     }
 
-    private fun encrypt(inputStream: InputStream, outputStream: OutputStream, key: SecretKey, iv: ByteArray) {
+    private fun encrypt(inputStream: InputStream, outputStream: OutputStream, key: SecretKey, salt: ByteArray, iv: ByteArray) {
 
         val cipher = getAESCipher(Cipher.ENCRYPT_MODE, key, IvParameterSpec(iv))
 
         inputStream.use { inStream ->
             outputStream.use { outStream ->
                 if (outputStream is FileOutputStream) {
-                    val header = header(beginString, version, iv)
+                    val header = header(beginString, version, salt, iv)
                     outStream.write(header.toByteArray())
                 }
                 process(inStream, outStream, cipher)
@@ -123,21 +142,27 @@ class Encryptor {
         }
     }
 
-    fun encrypt(input: ByteArray, key: SecretKey, iv: ByteArray): ByteArray {
+    fun encrypt(input: ByteArray, key: SecretKey, salt: ByteArray, iv: ByteArray): ByteArray {
         val outputStream = ByteArrayOutputStream()
-        encrypt(ByteArrayInputStream(input), outputStream, key, iv)
+        encrypt(ByteArrayInputStream(input), outputStream, key, salt, iv)
         return outputStream.toByteArray()
     }
 
-    fun encrypt(inputFile: String, outputFile: String, key: SecretKey, iv: ByteArray) {
-        encrypt(FileInputStream(inputFile), FileOutputStream(outputFile), key, iv)
+    fun encrypt(inputFile: String, outputFile: String, key: SecretKey, salt: ByteArray, iv: ByteArray) {
+        encrypt(FileInputStream(inputFile), FileOutputStream(outputFile), key, salt, iv)
+    }
+
+    private fun readVersion(inputStream: FileInputStream): String {
+        val headerBytes = inputStream.readNBytes(HEADER_SIZE)
+        val header = String(headerBytes)
+        return header.substring(beginString.length, beginString.length + 2)
+    }
+
+    private fun readSalt(inputStream: FileInputStream): ByteArray {
+        return inputStream.readNBytes(SALT_SIZE) ?: ByteArray(0)
     }
 
     private fun readIV(inputStream: FileInputStream): ByteArray {
-        val headerBytes = inputStream.readNBytes(HEADER_SIZE)
-        val header = String(headerBytes)
-        val version = header.substring(beginString.length, beginString.length + 2)
-        println("version=$version")
         return inputStream.readNBytes(IV_SIZE) ?: ByteArray(0)
     }
 
@@ -160,8 +185,24 @@ class Encryptor {
 
     fun decrypt(inputFile: String, outputFile: String, key: SecretKey) {
         val inputStream = FileInputStream(inputFile)
+        val version = readVersion(inputStream)
+        if ("03" == version) {
+            readSalt(inputStream)
+        }
         val iv = readIV(inputStream)
         decrypt(inputStream, FileOutputStream(outputFile), key, iv)
+    }
+
+    fun readHeader(inputFile: String): Pair<String, ByteArray> {
+        return try {
+            FileInputStream(inputFile).use { inputStream ->
+                val version = readVersion(inputStream)
+                val salt = if ("03" == version) readSalt(inputStream) else ByteArray(0)
+                Pair(version, salt)
+            }
+        } catch (e: Exception) {
+            throw IllegalStateException(e)
+        }
     }
 
 }

@@ -25,18 +25,45 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
     internal var observer = Observer()
 
-    fun getBase64Key(): String {
+    fun getText(): String {
+
+        val done = observer.build()
+
+        val text = done.get(timeoutSec, TimeUnit.SECONDS)
+        require(text.isNotEmpty())
+
+        return text
+    }
+
+    fun getBase64Key(salt: ByteArray): String {
 
         var base64Key = System.getProperty("key", "")
 
         if (base64Key.isNullOrBlank()) {
-            val done = observer.build()
 
-            val text = done.get(timeoutSec, TimeUnit.SECONDS)
+            val text = getText()
 
-            require(text.isNotEmpty())
+            base64Key = encryptor.generateBase64Key(text, salt)
+        }
 
-            base64Key = encryptor.sha256(text)
+        return base64Key
+    }
+
+    fun getBase64Key(inputFile: String): String {
+
+        var base64Key = System.getProperty("key", "")
+
+        if (base64Key.isNullOrBlank()) {
+
+            val text = getText()
+
+            val (version, salt) = encryptor.readHeader(inputFile)
+
+            base64Key = when (version) {
+                "03" -> encryptor.generateBase64Key(text, salt)
+                "01" -> encryptor.sha256(text)
+                else -> error("Unexpected version: $version")
+            }
         }
 
         return base64Key

@@ -55,6 +55,14 @@ class EncryptorTest {
         val key = encryptor.generateKey()
 
         assertEquals(32, key.encoded.size)
+
+        // PBE
+        val salt = encryptor.generateSalt()
+
+        val key1 = encryptor.generateBase64Key("text", salt)
+        val key2 = encryptor.generateBase64Key("text", salt)
+
+        assertEquals(key1, key2)
     }
 
     @Test
@@ -76,26 +84,33 @@ class EncryptorTest {
 
     @Test
     fun header() {
-        val iv = "0123456789ABCDEF"
-        assertEquals(16, iv.length)
-        val header = encryptor.header("Begin", 1, iv.toByteArray())
-        assertEquals(32, header.length)
-        assertEquals("Begin01         $iv", header)
+
+        val salt = encryptor.generateSalt()
+        assertEquals(16, salt.size)
+
+        val iv = encryptor.generateIV()
+        assertEquals(16, iv.size)
+
+        val header = encryptor.header("Begin", 3, salt, iv)
+
+        assertEquals(48, header.length)
+        assertEquals("Begin03         " + String(salt) + String(iv), header)
     }
 
     @Test
     fun encryptEndDecrypt() {
 
-        val key = encryptor.generateKey()
+        val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
+        val key = encryptor.generateKey("text", salt)
 
         // test byte array size
         val bytes = encryptor.getRandomBytes(1000)
-        var encrypted = encryptor.encrypt(bytes, key, iv)
+        var encrypted = encryptor.encrypt(bytes, key, salt, iv)
 
         assertTrue(encrypted.isNotEmpty())
 
-        encrypted = encryptor.encrypt(quote.toByteArray(), key, iv)
+        encrypted = encryptor.encrypt(quote.toByteArray(), key, salt, iv)
 
         val decrypted = encryptor.decrypt(encrypted, key, iv)
 
@@ -109,12 +124,16 @@ class EncryptorTest {
         val encryptedFile = "$targetDir/pom.xml.aes"
         val decryptedFile = "$targetDir/pom.xml.txt"
 
-        val key = encryptor.generateKey()
+        val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
 
-        encryptor.encrypt(inputFile, encryptedFile, key, iv)
+        val key1 = encryptor.generateKey("text", salt)
 
-        encryptor.decrypt(encryptedFile, decryptedFile, key)
+        encryptor.encrypt(inputFile, encryptedFile, key1, salt, iv)
+
+        val key2 = encryptor.generateKey("text", salt)
+
+        encryptor.decrypt(encryptedFile, decryptedFile, key2)
     }
 
 }

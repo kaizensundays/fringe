@@ -18,6 +18,7 @@ class EncryptMojoTest {
 
     private val encryptor: Encryptor = mock()
     private val key: SecretKey = mock()
+    private val salt = ByteArray(16)
     private val iv = ByteArray(16)
 
     private val mojo = EncryptMojo()
@@ -35,13 +36,15 @@ class EncryptMojoTest {
     fun encrypt() {
 
         whenever(encryptor.getKey(any())).thenReturn(key)
-        whenever(encryptor.getRandomBytes(16)).thenReturn(iv)
+        whenever(encryptor.generateSalt()).thenReturn(salt)
+        whenever(encryptor.generateIV()).thenReturn(iv)
 
         mojo.execute()
 
         verify(encryptor).getKey(any())
-        verify(encryptor).getRandomBytes(16)
-        verify(encryptor).encrypt("inputFile", "outputFile", key, iv)
+        verify(encryptor).generateSalt()
+        verify(encryptor).generateIV()
+        verify(encryptor).encrypt("inputFile", "outputFile", key, salt, iv)
         verifyNoMoreInteractions(encryptor)
     }
 
@@ -51,9 +54,10 @@ class EncryptMojoTest {
         mojo.logger = mock()
 
         whenever(encryptor.getKey(any())).thenReturn(key)
-        whenever(encryptor.getRandomBytes(16)).thenReturn(iv)
+        whenever(encryptor.generateSalt()).thenReturn(salt)
+        whenever(encryptor.generateIV()).thenReturn(iv)
 
-        whenever(encryptor.encrypt("inputFile", "outputFile", key, iv))
+        whenever(encryptor.encrypt("inputFile", "outputFile", key, salt, iv))
             .thenThrow(IllegalStateException("text"))
 
         mojo.execute()
