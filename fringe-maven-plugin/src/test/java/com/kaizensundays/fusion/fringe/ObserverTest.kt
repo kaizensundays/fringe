@@ -60,13 +60,13 @@ class ObserverTest {
 
         val observer = "September"
 
-        val sha256 = encryptor.sha256(observer)
+        val salt = encryptor.generateSalt()
 
-        val key = encryptor.getKey(sha256)
+        var key = encryptor.generateKey(observer, salt)
 
         val sample = "Anthropomorphism"
 
-        val encrypted = encryptor.encrypt(sample.toByteArray(), key, iv)
+        val encrypted = encryptor.encrypt(sample.toByteArray(), key, salt, iv)
 
         val encoded = Base64.getEncoder().encodeToString(encrypted)
 
@@ -79,6 +79,8 @@ class ObserverTest {
         assertEquals(encoded, text)
 
         val decoded = Base64.getDecoder().decode(text)
+
+        key = encryptor.generateKey(observer, salt)
 
         val decrypted = encryptor.decrypt(decoded, key, iv)
 

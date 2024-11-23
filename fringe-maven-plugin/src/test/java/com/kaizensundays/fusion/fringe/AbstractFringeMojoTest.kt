@@ -1,9 +1,12 @@
 package com.kaizensundays.fusion.fringe
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import java.security.Security
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -12,6 +15,11 @@ import java.util.concurrent.CompletableFuture
  * @author Sergey Chuykov
  */
 class AbstractFringeMojoTest {
+
+    @BeforeEach
+    fun before() {
+        Security.addProvider(BouncyCastleProvider())
+    }
 
     @Test
     fun getBase64Key() {
@@ -24,26 +32,26 @@ class AbstractFringeMojoTest {
         }
         mojo.observer = mock()
 
-        var base64Key = mojo.encryptor.sha256(observer)
-
         val done = CompletableFuture.completedFuture(observer)
 
         whenever(mojo.observer.build()).thenReturn(done)
 
         System.clearProperty("key")
 
-        var value = mojo.getBase64Key()
+        val salt = mojo.encryptor.generateSalt();
 
-        assertEquals(base64Key, value)
+        var value = mojo.getBase64Key(salt)
+
+        assertEquals(44, value.length)
 
         // env
         val lake = "Reiden"
 
-        base64Key = mojo.encryptor.sha256(lake)
+        val base64Key = mojo.encryptor.sha256(lake)
 
         System.setProperty("key", base64Key)
 
-        value = mojo.getBase64Key()
+        value = mojo.getBase64Key(salt)
 
         assertEquals(base64Key, value)
     }

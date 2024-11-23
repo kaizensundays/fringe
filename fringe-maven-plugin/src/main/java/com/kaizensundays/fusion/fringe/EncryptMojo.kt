@@ -19,13 +19,14 @@ class EncryptMojo : AbstractFringeMojo() {
         val outputFile = System.getProperty("o", "")
         require(outputFile.isNotEmpty())
 
-        val base64Key = getBase64Key()
+        val salt = encryptor.generateSalt()
+        val base64Key = getBase64Key(salt)
         require(base64Key.isNotEmpty())
 
         val key = encryptor.getKey(base64Key)
-        val iv = encryptor.getRandomBytes(16)
+        val iv = encryptor.generateIV()
 
-        encryptor.encrypt(inputFile, outputFile, key, iv)
+        encryptor.encrypt(inputFile, outputFile, key, salt, iv)
     }
 
 }
