@@ -54,8 +54,7 @@ class Encryptor {
         return keyFactory.generateSecret(keySpec)
     }
 
-    fun generateBase64Key(text: String, salt: ByteArray): String {
-        val key = generatePBKDF2Key(text, salt)
+    fun generateBase64Key(key: SecretKey): String {
         return Base64.getEncoder().encodeToString(key.encoded)
     }
 

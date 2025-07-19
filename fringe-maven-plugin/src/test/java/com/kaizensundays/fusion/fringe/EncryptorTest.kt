@@ -59,8 +59,11 @@ class EncryptorTest {
         // PBE
         val salt = encryptor.generateSalt()
 
-        val key1 = encryptor.generateBase64Key("text", salt)
-        val key2 = encryptor.generateBase64Key("text", salt)
+        val secretKey1 = encryptor.generatePBKDF2Key("text", salt)
+        val key1 = encryptor.generateBase64Key(secretKey1)
+
+        val secretKey2 = encryptor.generatePBKDF2Key("text", salt)
+        val key2 = encryptor.generateBase64Key(secretKey2)
 
         assertEquals(key1, key2)
     }
