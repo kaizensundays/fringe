@@ -1,5 +1,7 @@
 package com.kaizensundays.fusion.fringe
 
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator
+import org.bouncycastle.crypto.params.Argon2Parameters
 import org.bouncycastle.jcajce.provider.digest.SHA256
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -17,6 +19,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+
 
 /**
  * Created: Sunday 9/1/2024, 12:22 PM Eastern Time
@@ -52,6 +55,28 @@ class Encryptor {
         val keySpec = PBEKeySpec(text.toCharArray(), salt, PBE_ITERATIONS_COUNT, KEY_SIZE_BITS)
         val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256", "BC")
         return keyFactory.generateSecret(keySpec)
+    }
+
+    fun generateArgon2Key(text: String, salt: ByteArray): SecretKey {
+
+        val memory = 65536 // 64MB
+        val iterations = 10
+        val parallelism = 1
+        val keyLength = 32 // 256-bit key for AES
+
+        val builder = Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+            .withSalt(salt)
+            .withMemoryAsKB(memory)
+            .withIterations(iterations)
+            .withParallelism(parallelism)
+
+        val generator = Argon2BytesGenerator()
+        generator.init(builder.build())
+
+        val derivedKey = ByteArray(keyLength)
+        generator.generateBytes(text.toByteArray(), derivedKey)
+
+        return SecretKeySpec(derivedKey, "AES")
     }
 
     fun generateBase64Key(key: SecretKey): String {
