@@ -43,7 +43,7 @@ abstract class AbstractFringeMojo : AbstractMojo() {
 
             val text = getText()
 
-            val key = encryptor.generatePBKDF2Key(text, salt)
+            val key = encryptor.generateArgon2Key(text, salt)
 
             base64Key = encryptor.generateBase64Key(key)
         }
@@ -62,6 +62,7 @@ abstract class AbstractFringeMojo : AbstractMojo() {
             val (version, salt) = encryptor.readHeader(inputFile)
 
             base64Key = when (version) {
+                "05" -> encryptor.generateBase64Key(encryptor.generateArgon2Key(text, salt))
                 "03" -> encryptor.generateBase64Key(encryptor.generatePBKDF2Key(text, salt))
                 "01" -> encryptor.sha256(text)
                 else -> error("Unexpected version: $version")
