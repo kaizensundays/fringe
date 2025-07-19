@@ -48,14 +48,14 @@ class Encryptor {
         return keyGen.generateKey()
     }
 
-    fun generateKey(text: String, salt: ByteArray): SecretKey {
+    fun generatePBKDF2Key(text: String, salt: ByteArray): SecretKey {
         val keySpec = PBEKeySpec(text.toCharArray(), salt, PBE_ITERATIONS_COUNT, KEY_SIZE_BITS)
         val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256", "BC")
         return keyFactory.generateSecret(keySpec)
     }
 
     fun generateBase64Key(text: String, salt: ByteArray): String {
-        val key = generateKey(text, salt)
+        val key = generatePBKDF2Key(text, salt)
         return Base64.getEncoder().encodeToString(key.encoded)
     }
 

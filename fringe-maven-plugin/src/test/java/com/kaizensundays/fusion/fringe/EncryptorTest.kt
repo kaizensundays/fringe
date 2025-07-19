@@ -102,7 +102,7 @@ class EncryptorTest {
 
         val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
-        val key = encryptor.generateKey("text", salt)
+        val key = encryptor.generatePBKDF2Key("text", salt)
 
         // test byte array size
         val bytes = encryptor.getRandomBytes(1000)
@@ -127,11 +127,11 @@ class EncryptorTest {
         val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
 
-        val key1 = encryptor.generateKey("text", salt)
+        val key1 = encryptor.generatePBKDF2Key("text", salt)
 
         encryptor.encrypt(inputFile, encryptedFile, key1, salt, iv)
 
-        val key2 = encryptor.generateKey("text", salt)
+        val key2 = encryptor.generatePBKDF2Key("text", salt)
 
         encryptor.decrypt(encryptedFile, decryptedFile, key2)
     }
