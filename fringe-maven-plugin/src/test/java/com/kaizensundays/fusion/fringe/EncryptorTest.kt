@@ -50,7 +50,7 @@ class EncryptorTest {
     }
 
     @Test
-    fun generateKey() {
+    fun generatePBKDF2Key() {
 
         val key = encryptor.generateKey()
 
@@ -59,8 +59,30 @@ class EncryptorTest {
         // PBE
         val salt = encryptor.generateSalt()
 
-        val key1 = encryptor.generateBase64Key("text", salt)
-        val key2 = encryptor.generateBase64Key("text", salt)
+        val secretKey1 = encryptor.generatePBKDF2Key("text", salt)
+        val key1 = encryptor.generateBase64Key(secretKey1)
+
+        val secretKey2 = encryptor.generatePBKDF2Key("text", salt)
+        val key2 = encryptor.generateBase64Key(secretKey2)
+
+        assertEquals(key1, key2)
+    }
+
+    @Test
+    fun generateArgon2Key() {
+
+        val key = encryptor.generateKey()
+
+        assertEquals(32, key.encoded.size)
+
+        // PBE
+        val salt = encryptor.generateSalt()
+
+        val secretKey1 = encryptor.generateArgon2Key("text", salt)
+        val key1 = encryptor.generateBase64Key(secretKey1)
+
+        val secretKey2 = encryptor.generateArgon2Key("text", salt)
+        val key2 = encryptor.generateBase64Key(secretKey2)
 
         assertEquals(key1, key2)
     }
@@ -102,7 +124,7 @@ class EncryptorTest {
 
         val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
-        val key = encryptor.generateKey("text", salt)
+        val key = encryptor.generatePBKDF2Key("text", salt)
 
         // test byte array size
         val bytes = encryptor.getRandomBytes(1000)
@@ -127,11 +149,11 @@ class EncryptorTest {
         val salt = encryptor.generateSalt()
         val iv = encryptor.generateIV()
 
-        val key1 = encryptor.generateKey("text", salt)
+        val key1 = encryptor.generatePBKDF2Key("text", salt)
 
         encryptor.encrypt(inputFile, encryptedFile, key1, salt, iv)
 
-        val key2 = encryptor.generateKey("text", salt)
+        val key2 = encryptor.generatePBKDF2Key("text", salt)
 
         encryptor.decrypt(encryptedFile, decryptedFile, key2)
     }
