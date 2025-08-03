@@ -1,5 +1,7 @@
 package com.kaizensundays.fusion.fringe
 
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator
+import org.bouncycastle.crypto.params.Argon2Parameters
 import org.bouncycastle.jcajce.provider.digest.SHA256
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -18,6 +20,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
+
 /**
  * Created: Sunday 9/1/2024, 12:22 PM Eastern Time
  *
@@ -28,7 +31,7 @@ class Encryptor {
 
     private val beginString = "Fringe"
 
-    private val version = 3
+    private val version = 5
 
     private val AES_BLOCK_SIZE = 16
     private val NUMBER_OF_BLOCKS = 1024
@@ -48,14 +51,37 @@ class Encryptor {
         return keyGen.generateKey()
     }
 
-    fun generateKey(text: String, salt: ByteArray): SecretKey {
+    fun generatePBKDF2Key(text: String, salt: ByteArray): SecretKey {
+        println("generatePBKDF2Key")
         val keySpec = PBEKeySpec(text.toCharArray(), salt, PBE_ITERATIONS_COUNT, KEY_SIZE_BITS)
         val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256", "BC")
         return keyFactory.generateSecret(keySpec)
     }
 
-    fun generateBase64Key(text: String, salt: ByteArray): String {
-        val key = generateKey(text, salt)
+    fun generateArgon2Key(text: String, salt: ByteArray): SecretKey {
+        println("generateArgon2Key")
+
+        val memory = 65536 // 64MB
+        val iterations = 10
+        val parallelism = 1
+        val keyLength = 32 // 256-bit key for AES
+
+        val builder = Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+            .withSalt(salt)
+            .withMemoryAsKB(memory)
+            .withIterations(iterations)
+            .withParallelism(parallelism)
+
+        val generator = Argon2BytesGenerator()
+        generator.init(builder.build())
+
+        val derivedKey = ByteArray(keyLength)
+        generator.generateBytes(text.toByteArray(), derivedKey)
+
+        return SecretKeySpec(derivedKey, "AES")
+    }
+
+    fun generateBase64Key(key: SecretKey): String {
         return Base64.getEncoder().encodeToString(key.encoded)
     }
 
@@ -183,10 +209,14 @@ class Encryptor {
         return outputStream.toByteArray()
     }
 
+    fun hasSalt(version: String): Boolean {
+        return ("05" == version || "03" == version)
+    }
+
     fun decrypt(inputFile: String, outputFile: String, key: SecretKey) {
         val inputStream = FileInputStream(inputFile)
         val version = readVersion(inputStream)
-        if ("03" == version) {
+        if (hasSalt(version)) {
             readSalt(inputStream)
         }
         val iv = readIV(inputStream)
@@ -197,7 +227,7 @@ class Encryptor {
         return try {
             FileInputStream(inputFile).use { inputStream ->
                 val version = readVersion(inputStream)
-                val salt = if ("03" == version) readSalt(inputStream) else ByteArray(0)
+                val salt = if (hasSalt(version)) readSalt(inputStream) else ByteArray(0)
                 Pair(version, salt)
             }
         } catch (e: Exception) {

@@ -62,7 +62,7 @@ class ObserverTest {
 
         val salt = encryptor.generateSalt()
 
-        var key = encryptor.generateKey(observer, salt)
+        var key = encryptor.generatePBKDF2Key(observer, salt)
 
         val sample = "Anthropomorphism"
 
@@ -80,7 +80,7 @@ class ObserverTest {
 
         val decoded = Base64.getDecoder().decode(text)
 
-        key = encryptor.generateKey(observer, salt)
+        key = encryptor.generatePBKDF2Key(observer, salt)
 
         val decrypted = encryptor.decrypt(decoded, key, iv)
 
